@@ -7,8 +7,9 @@ class InMemoryTicketRepository implements TicketRepository {
     private final ConcurrentHashMap<String, Ticket> map = new ConcurrentHashMap<>();
 
     @Override
-    public void save(Ticket ticket) {
+    public Ticket save(Ticket ticket) {
         map.put(ticket.getHash(), ticket.dto());
+        return ticket;
     }
 
     @Override

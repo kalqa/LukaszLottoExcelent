@@ -3,7 +3,7 @@ package pl.lotto.numberreceiver;
 import java.util.Optional;
 
 interface TicketRepository {
-    void save(Ticket ticket);
+    Ticket save(Ticket ticket);
 
     Optional<Ticket> findByHash(String hash);
 

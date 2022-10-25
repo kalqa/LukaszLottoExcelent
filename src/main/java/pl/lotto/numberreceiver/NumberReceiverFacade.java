@@ -13,9 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static pl.lotto.numberreceiver.DrawDateGenerator.generateDrawDate;
 import static pl.lotto.numberreceiver.GeneratedTicketMessageProvider.generated_ticket_message_failed;
-import static pl.lotto.numberreceiver.GeneratedTicketMessageProvider.generated_ticket_message_ok;
 import static pl.lotto.numberreceiver.NumbersDuplicationCounter.printDuplicatedNumbersInfo;
 import static pl.lotto.numberreceiver.NumbersMessageProvider.*;
 import static pl.lotto.numberreceiver.TicketIdGenerator.generateHash;
@@ -26,9 +24,25 @@ public class NumberReceiverFacade {
     private final NumbersValidator numberValidator;
     private final TicketRepository ticketRepository;
 
-    public NumberReceiverFacade(NumbersValidator numberValidator, TicketRepository ticketRepository) {
+    private final DrawDateGenerator drawDateGenerator;
+
+    NumberReceiverFacade(NumbersValidator numberValidator, TicketRepository ticketRepository, DrawDateGenerator drawDateGenerator) {
         this.numberValidator = numberValidator;
         this.ticketRepository = ticketRepository;
+        this.drawDateGenerator = drawDateGenerator;
+    }
+
+    public NumbersResultMessageDto inputNumbers(Set<Integer> inputNumbers) {
+        boolean validate = numberValidator.validate(inputNumbers);
+        if(validate){
+            LocalDateTime date = drawDateGenerator.generateDrawDate();
+            String hash = generateHash();
+            Ticket generatedTicket = generateTicket(inputNumbers, hash, date);
+            Ticket ticket = ticketRepository.save(generatedTicket);
+            TicketMessageDto ticketMessageDto = new TicketMessageDto(ticket, generated_ticket_message_failed());
+            return new NumbersResultMessageDto(ticketMessageDto.ticket().getNumbers(), "all good");
+        }
+        return new NumbersResultMessageDto(Set.of(), "smth not good");
     }
 
     public NumbersResultMessageDto isLessThanSixNumbers(Set<Integer> inputNumbers) {
@@ -71,24 +85,12 @@ public class NumberReceiverFacade {
         throw new RangeNumbersException();
     }
 
-    public TicketMessageDto isGeneratedTicket(Set<Integer> inputNumbers) {
-        if (inputNumbers.isEmpty()) {
-            numbers_not_found();
-        }
-        if (numberValidator.checkEqualsSixNumbers(inputNumbers)) {
-            String hash = generateHash();
-            LocalDateTime date = generateDrawDate();
-            Ticket generatedTicket = Ticket.builder()
-                    .hash(hash)
-                    .numbers(new TreeSet<>(inputNumbers))
-                    .drawDate(date)
-                    .build();
-            ticketRepository.save(generatedTicket);
-            Optional<Ticket> addedTicket = ticketRepository.findByHash(hash);
-            if (addedTicket.isPresent()) {
-                return new TicketMessageDto(generatedTicket, generated_ticket_message_ok());
-            }
-        }
-        return new TicketMessageDto(null, generated_ticket_message_failed());
+    public Ticket generateTicket(Set<Integer> inputNumbers, String hash, LocalDateTime date) {
+        Ticket ticket = Ticket.builder()
+                .hash(hash)
+                .numbers(new TreeSet<>(inputNumbers))
+                .drawDate(date)
+                .build();
+        return ticket;
     }
 }
