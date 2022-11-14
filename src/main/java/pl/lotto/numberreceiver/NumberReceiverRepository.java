@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface NumberReceiverRepository {
-    NumberReceiver save(NumberReceiver numberReceiver);
+    UserNumbers save(UserNumbers userNumbers);
 
     Set<Integer> findByDate(String dateTime);
 
