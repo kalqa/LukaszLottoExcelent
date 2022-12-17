@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
-@Document(collection = "result_announcer")
+@Document
 class ResultAnnouncer {
     @Id
     UUID uuid;
