@@ -1,26 +1,27 @@
 package pl.lotto.resultannouncer;
 
 import pl.lotto.resultannouncer.dto.ResultAnnouncerDto;
-import pl.lotto.resultchecker.ResultsCheckerFacade;
-import pl.lotto.resultchecker.dto.ResultsLottoDto;
 
-import java.time.LocalDateTime;
-import java.util.Set;
 import java.util.UUID;
 
-import static pl.lotto.resultannouncer.ResultAnnouncerMessage.NOT_WIN;
 import static pl.lotto.resultannouncer.ResultAnnouncerMessage.WIN;
 
 public class ResultAnnouncerFacade {
-    ResultsCheckerFacade resultsCheckerFacade;
+    private final DateTimeDrawResult dateTimeDrawResult;
+    private final ResultAnnouncerRepository resultAnnouncerRepository;
+
+    public ResultAnnouncerFacade(DateTimeDrawResult dateTimeDrawResult, ResultAnnouncerRepository resultAnnouncerRepository) {
+        this.dateTimeDrawResult = dateTimeDrawResult;
+        this.resultAnnouncerRepository = resultAnnouncerRepository;
+    }
 
     public ResultAnnouncerDto getResults(UUID uuid) {
-        if (uuid == null) {
-            ResultsLottoDto resultLotto = resultsCheckerFacade.getWinnerNumbers(uuid);
-            LocalDateTime resultDateTime = resultLotto.dateTimeDraw();
-            Set<Integer> resultWinningNumbers = resultLotto.winnerNumbers();
-            return new ResultAnnouncerDto(uuid, resultWinningNumbers, resultDateTime, WIN);
+        if (uuid != null) {
+            ResultAnnouncer resultAnnouncer = resultAnnouncerRepository.findResultLottoByDate(dateTimeDrawResult.generateNextDrawDate());
+            ResultAnnouncer createdResultAnnouncer = new ResultAnnouncer(resultAnnouncer.uuid, resultAnnouncer.inputNumbers, resultAnnouncer.drawDateTime);
+            ResultAnnouncer savedResultAnnouncer = resultAnnouncerRepository.save(createdResultAnnouncer);
+            return new ResultAnnouncerDto(savedResultAnnouncer.uuid, savedResultAnnouncer.inputNumbers, savedResultAnnouncer.drawDateTime, WIN);
         }
-        return new ResultAnnouncerDto(null, null, null, NOT_WIN);
+        throw new IllegalArgumentException();
     }
 }
