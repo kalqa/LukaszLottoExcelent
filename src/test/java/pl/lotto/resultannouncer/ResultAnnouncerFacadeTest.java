@@ -12,7 +12,7 @@ import static java.time.Month.DECEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ResultAnnouncerFacadeTest {
-    
+
     ResultAnnouncerRepository resultAnnouncerRepository;
 
     @Test
